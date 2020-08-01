@@ -4,6 +4,7 @@ import argparse
 def parse_args_base(parser):
     parser.add_argument('--n', help='network complexity', type=int, default=3)
     parser.add_argument('--batch', help='batch size', type=int, default=128)
+    parser.add_argument('--loss_type', help='loss function in {crossentropy, softmaxnorm, softtriple}')
     return parser
 
 
@@ -21,7 +22,6 @@ def parse_args_train():
     parser.add_argument('--decay_lr_2', help='iteration at which lr decays 2nd', type=int, default=48000)
     parser.add_argument('--lr_decay_rate', help='lr *= lr_decay_rate at drop_lr_i-th iteration', type=float, default=0.1)
     parser.add_argument('--n_iter', help='learning iterations', type=int, default=64000)
-    parser.add_argument('--loss_type', help='loss function in {crossentropy, softmaxnorm, softtriple}')
     
     args = parser.parse_args()
 

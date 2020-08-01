@@ -17,13 +17,12 @@ class SoftTriple(nn.Module):
         self.margin = margin
         self.cN = cN
         self.K = K
-        self.fc = Parameter(torch.Tensor(dim, cN*K))
+        self.fc = Parameter(torch.Tensor(dim, cN*K).cuda())
         self.weight = torch.zeros(cN*K, cN*K, dtype=torch.bool).cuda()
         for i in range(0, cN):
             for j in range(0, K):
                 self.weight[i*K+j, i*K+j+1:(i+1)*K] = 1
         init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        return
 
     def forward(self, input, target):
         centers = F.normalize(self.fc, p=2, dim=0)
@@ -55,12 +54,11 @@ class CELoss(nn.Module):
         super().__init__()
         self.dim = dim
         self.cN = cN
-        self.fc = Parameter(torch.Tensor(dim, cN))
+        self.fc = Parameter(torch.Tensor(dim, cN).cuda())
         self.ce = nn.CrossEntropyLoss()
         init.kaiming_uniform_(self.fc, a=math.sqrt(5))
 
     def forward(self, input, target):
-        print(input.shape, target.shape, self.fc.shape)
         emb = input.matmul(self.fc)
         return self.ce(emb, target)
 

@@ -9,7 +9,7 @@ def test(opt):
     print(opt)
     dataloader = data.get_dataloader(False, opt.batch)
     model = models.ResNetModel(opt, train=False)
-    model.load_model(opt.params_path)
+    model.load_model(opt.params_path_m, opt.params_path_c)
 
     total_n = 0
     total_correct = 0

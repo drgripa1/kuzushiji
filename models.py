@@ -24,10 +24,7 @@ def init_weights(net, gain=0.02):
 class ResNetModel:
     def __init__(self, opt, train=True):
         self.net = nets.ResNetCifar(opt.n)
-        if train:
-            self.net.train()
-        else:
-            self.net.eval()
+
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
             self.net = self.net.to('cuda')
@@ -40,19 +37,18 @@ class ResNetModel:
         # for param in self.net.parameters():
         #     num_params += param.numel()
         # print(f'Total number of parameters : {num_params / 1e6:.3f} M')
-
+        if opt.loss_type == 'crossentropy':
+            self.criterion = ST.CELoss(64, 10)
+        elif opt.loss_type == 'softmaxnorm':
+            self.criterion = ST.SoftTriple(20, 0.1, 0.0, 0.0, 64, 10, 1)
+        elif opt.loss_type == 'softtriple':
+            self.criterion = ST.SoftTriple(20, 0.1, 0.2, 0.01, 64, 10, 10)
+        else:
+            raise NotImplementedError('loss_type must be chosen from [crossentropy, softmaxnorm, softtriple]')
+    
         if train:
             self.checkpoint_dir = opt.checkpoint_dir
 
-            if opt.loss_type == 'crossentropy':
-                self.criterion = ST.CELoss(64, 10)
-            elif opt.loss_type == 'softmaxnorm':
-                self.criterion = ST.SoftTriple(20, 0.1, 0.0, 0.0, 64, 10, 1)
-            elif opt.loss_type == 'softtriple':
-                self.criterion = ST.SoftTriple(20, 0.1, 0.2, 0.01, 64, 10, 10)
-            else:
-                raise NotImplementedError('loss_type must be chosen from [crossentropy, softmaxnorm, softtriple]')
-    
             self.optimizer = optim.Adam(
                 [{"params": self.net.parameters(), "lr": opt.modellr},
                  {"params": self.criterion.parameters(), "lr": opt.centerlr}],
@@ -63,6 +59,11 @@ class ResNetModel:
                 gamma=opt.lr_decay_rate
                 )
             self.loss = 0.0
+            self.net.train()
+            self.criterion.train()
+        else:
+            self.net.eval()
+            self.criterion.eval()
 
     def optimize_params(self, x, label):
         x = x.to(self.device)
