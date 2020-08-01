@@ -9,7 +9,7 @@ def train(opt):
     print(opt)
     with open(os.path.join(opt.checkpoint_dir, 'loss_log.txt'), 'a') as f:
         f.write(str(opt) + '\n')
-    dataloader = data.get_dataloader(True, opt.batch, opt.dataset_dir)
+    dataloader = data.get_dataloader(True, opt.batch)
     model = models.ResNetModel(opt, train=True)
 
     total_iter = 0

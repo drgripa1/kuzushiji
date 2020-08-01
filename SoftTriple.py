@@ -40,3 +40,30 @@ class SoftTriple(nn.Module):
             return lossClassify+self.tau*reg
         else:
             return lossClassify
+
+    def infer(self, input):
+        centers = F.normalize(self.fc, p=2, dim=0)
+        simInd = input.matmul(centers)
+        simStruc = simInd.reshape(-1, self.cN, self.K)
+        prob = F.softmax(simStruc*self.gamma, dim=2)
+        simClass = torch.sum(prob*simStruc, dim=2)
+        return torch.max(simClass.data, 1)[1]  # return class indices
+
+
+class CELoss(nn.Module):
+    def __init__(self, dim, cN):
+        super().__init__()
+        self.dim = dim
+        self.cN = cN
+        self.fc = Parameter(torch.Tensor(dim, cN))
+        self.ce = nn.CrossEntropyLoss()
+        init.kaiming_uniform_(self.fc, a=math.sqrt(5))
+
+    def forward(self, input, target):
+        print(input.shape, target.shape, self.fc.shape)
+        emb = input.matmul(self.fc)
+        return self.ce(emb, target)
+
+    def infer(self, input):
+        emb = input.matmul(self.fc)
+        return torch.max(emb.data, 1)[1]  # return class indices

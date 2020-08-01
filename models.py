@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 import nets
+import SoftTriple as ST
 
 
 def init_weights(net, gain=0.02):
@@ -23,6 +24,10 @@ def init_weights(net, gain=0.02):
 class ResNetModel:
     def __init__(self, opt, train=True):
         self.net = nets.ResNetCifar(opt.n)
+        if train:
+            self.net.train()
+        else:
+            self.net.eval()
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
             self.net = self.net.to('cuda')
@@ -31,43 +36,50 @@ class ResNetModel:
             self.device = torch.device('cpu')
 
         init_weights(self.net)
-        num_params = 0
-        for param in self.net.parameters():
-            num_params += param.numel()
-        print(f'Total number of parameters : {num_params / 1e6:.3f} M')
+        # num_params = 0
+        # for param in self.net.parameters():
+        #     num_params += param.numel()
+        # print(f'Total number of parameters : {num_params / 1e6:.3f} M')
 
         if train:
             self.checkpoint_dir = opt.checkpoint_dir
-            self.optimizer = optim.SGD(
-                self.net.parameters(),
-                lr=opt.lr,
-                momentum=opt.momentum,
-                weight_decay=opt.weight_decay
-                )
+
+            if opt.loss_type == 'crossentropy':
+                self.criterion = ST.CELoss(64, 10)
+            elif opt.loss_type == 'softmaxnorm':
+                self.criterion = ST.SoftTriple(20, 0.1, 0.0, 0.0, 64, 10, 1)
+            elif opt.loss_type == 'softtriple':
+                self.criterion = ST.SoftTriple(20, 0.1, 0.2, 0.01, 64, 10, 10)
+            else:
+                raise NotImplementedError('loss_type must be chosen from [crossentropy, softmaxnorm, softtriple]')
+    
+            self.optimizer = optim.Adam(
+                [{"params": self.net.parameters(), "lr": opt.modellr},
+                 {"params": self.criterion.parameters(), "lr": opt.centerlr}],
+                eps=opt.eps, weight_decay=opt.weight_decay)
             self.scheduler = optim.lr_scheduler.MultiStepLR(
                 self.optimizer,
                 milestones=[opt.decay_lr_1, opt.decay_lr_2],
                 gamma=opt.lr_decay_rate
                 )
-            self.criterion = nn.CrossEntropyLoss()
             self.loss = 0.0
 
     def optimize_params(self, x, label):
         x = x.to(self.device)
         label = label.to(self.device)
-        y = self._forward(x)
-        self._update_params(y, label)
+        emb = self._forward(x)
+        self._update_params(emb, label)
 
     def _forward(self, x):
         return self.net(x)
 
-    def _backward(self, y, label):
-        self.loss = self.criterion(y, label)
+    def _backward(self, emb, label):
+        self.loss = self.criterion(emb, label)
         self.loss.backward()
 
-    def _update_params(self, y, label):
+    def _update_params(self, emb, label):
         self.optimizer.zero_grad()
-        self._backward(y, label)
+        self._backward(emb, label)
         self.optimizer.step()
         self.scheduler.step()  # scheduler step in each iteration
 
@@ -75,8 +87,8 @@ class ResNetModel:
         with torch.no_grad():
             x = x.to(self.device)
             label = label.to(self.device)
-            outputs = self._forward(x)
-            _, predicted = torch.max(outputs.data, 1)
+            emb = self._forward(x)
+            predicted = self.criterion.infer(emb)
             total = label.size(0)
             correct = (predicted == label).sum().item()
             return correct, total, predicted
@@ -85,17 +97,20 @@ class ResNetModel:
         with torch.no_grad():
             x = x.to(self.device)
             label = label.to(self.device)
-            y = self._forward(x)
-            return self.criterion(y, label).item()
+            emb = self._forward(x)
+            return self.criterion(emb, label).item()
 
     def save_model(self, name):
-        path = os.path.join(self.checkpoint_dir, f'model_{name}.pth')
-        torch.save(self.net.state_dict(), path)
-        print(f'model saved to {path}')
+        path_m = os.path.join(self.checkpoint_dir, f'model_{name}.pth')
+        path_c = os.path.join(self.checkpoint_dir, f'criterion_{name}.pth')
+        torch.save(self.net.state_dict(), path_m)
+        torch.save(self.criterion.state_dict(), path_c)
+        print(f'model saved to {path_m}, {path_c}')
 
-    def load_model(self, path):
-        self.net.load_state_dict(torch.load(path))
-        print(f'model loaded from {path}')
+    def load_model(self, path_m, path_c):
+        self.net.load_state_dict(torch.load(path_m))
+        self.criterion.load_state_dict(torch.load(path_c))
+        print(f'model loaded from {path_m}, {path_c}')
 
     def get_current_loss(self):
         return self.loss.item()
