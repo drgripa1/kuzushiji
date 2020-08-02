@@ -9,7 +9,7 @@ def parse_args_base(parser):
     parser.add_argument('--gamma', default=0.1, type=float, help='gamma')
     parser.add_argument('--tau', default=0.2, type=float, help='tau')
     parser.add_argument('--margin', default=0.01, type=float, help='margin')
-    parser.add_argument('-K', default=10, type=int, help='K')
+    parser.add_argument('--K', default=10, type=int, help='K (# of intra class anchors)')
     return parser
 
 
@@ -25,7 +25,7 @@ def parse_args_train():
     parser.add_argument('--weight_decay', help='optimizer weight decay (L2 reg.)', type=float, default=0.0001)
     parser.add_argument('--decay_lr_1', help='iteration at which lr decays 1st', type=int, default=16000)
     parser.add_argument('--decay_lr_2', help='iteration at which lr decays 2nd', type=int, default=24000)
-    parser.add_argument('--lr_decay_rate', help='lr *= lr_decay_rate at drop_lr_i-th iteration', type=float, default=0.1)
+    parser.add_argument('--lr_decay_rate', help='lr *= lr_decay_rate at decay_lr_i-th iteration', type=float, default=0.1)
     parser.add_argument('--n_iter', help='learning iterations', type=int, default=32000)
     args = parser.parse_args()
 

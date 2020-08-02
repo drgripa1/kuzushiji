@@ -34,11 +34,11 @@ class ResNetModel:
         init_weights(self.net)
 
         if opt.loss_type == 'crossentropy':
-            self.criterion = ST.CELoss(64, 10)
+            self.criterion = ST.CELoss(64, 10, self.device)
         elif opt.loss_type == 'softmaxnorm':
-            self.criterion = ST.SoftTriple(opt.la, opt.gamma, 0.0, 0.0, 64, 10, 1)
+            self.criterion = ST.SoftTriple(opt.la, opt.gamma, 0.0, 0.0, 64, 10, 1, self.device)
         elif opt.loss_type == 'softtriple':
-            self.criterion = ST.SoftTriple(opt.la, opt.gamma, opt.tau, opt.margin, 64, 10, opt.K)
+            self.criterion = ST.SoftTriple(opt.la, opt.gamma, opt.tau, opt.margin, 64, 10, opt.K, self.device)
         else:
             raise NotImplementedError('loss_type must be chosen from [crossentropy, softmaxnorm, softtriple]')
 

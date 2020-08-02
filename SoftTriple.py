@@ -9,16 +9,17 @@ from torch.nn import init
 
 
 class SoftTriple(nn.Module):
-    def __init__(self, la, gamma, tau, margin, dim, cN, K):
+    def __init__(self, la, gamma, tau, margin, dim, cN, K, device):
         super(SoftTriple, self).__init__()
+        self.device = device
         self.la = la
         self.gamma = 1./gamma
         self.tau = tau
         self.margin = margin
         self.cN = cN
         self.K = K
-        self.fc = Parameter(torch.Tensor(dim, cN*K).cuda())
-        self.weight = torch.zeros(cN*K, cN*K, dtype=torch.bool).cuda()
+        self.fc = Parameter(torch.Tensor(dim, cN*K).to(self.device))
+        self.weight = torch.zeros(cN*K, cN*K, dtype=torch.bool).to(self.device)
         for i in range(0, cN):
             for j in range(0, K):
                 self.weight[i*K+j, i*K+j+1:(i+1)*K] = 1
@@ -30,7 +31,7 @@ class SoftTriple(nn.Module):
         simStruc = simInd.reshape(-1, self.cN, self.K)
         prob = F.softmax(simStruc*self.gamma, dim=2)
         simClass = torch.sum(prob*simStruc, dim=2)
-        marginM = torch.zeros(simClass.shape).cuda()
+        marginM = torch.zeros(simClass.shape).to(self.device)
         marginM[torch.arange(0, marginM.shape[0]), target] = self.margin
         lossClassify = F.cross_entropy(self.la*(simClass-marginM), target)
         if self.tau > 0 and self.K > 1:
@@ -50,11 +51,12 @@ class SoftTriple(nn.Module):
 
 
 class CELoss(nn.Module):
-    def __init__(self, dim, cN):
+    def __init__(self, dim, cN, device):
         super().__init__()
+        self.device = device
         self.dim = dim
         self.cN = cN
-        self.fc = Parameter(torch.Tensor(dim, cN).cuda())
+        self.fc = Parameter(torch.Tensor(dim, cN).to(self.device))
         self.ce = nn.CrossEntropyLoss()
         init.kaiming_uniform_(self.fc, a=math.sqrt(5))
 
