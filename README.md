@@ -5,6 +5,7 @@ This code is confirmed to run with Python 3.7 and PyTorch 1.6.0.
 
 ## Usage
 1. Download datasets
+
 ```
 bash download_dataset.sh
 ```
@@ -36,5 +37,5 @@ KMNIST (http://codh.rois.ac.jp/kmnist/)
 - Qi Qian, Lei Shang, Baigui Sun, Juhua Hu, Hao Li, Rong Jin, "SoftTriple Loss: Deep Metric Learning Without Triplet Sampling", ICCV 2019.
 - Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun, "Deep Residual Learning for Image Recognition", CVPR 2016.
 
-# Acknowledgements
+## Acknowledgements
 This implementation is based on https://github.com/idstcv/SoftTriple.
