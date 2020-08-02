@@ -28,24 +28,20 @@ class ResNetModel:
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
             self.net = self.net.to('cuda')
-            self.net = torch.nn.DataParallel(self.net)
         else:
             self.device = torch.device('cpu')
 
         init_weights(self.net)
-        # num_params = 0
-        # for param in self.net.parameters():
-        #     num_params += param.numel()
-        # print(f'Total number of parameters : {num_params / 1e6:.3f} M')
+
         if opt.loss_type == 'crossentropy':
             self.criterion = ST.CELoss(64, 10)
         elif opt.loss_type == 'softmaxnorm':
-            self.criterion = ST.SoftTriple(20, 0.1, 0.0, 0.0, 64, 10, 1)
+            self.criterion = ST.SoftTriple(opt.la, opt.gamma, 0.0, 0.0, 64, 10, 1)
         elif opt.loss_type == 'softtriple':
-            self.criterion = ST.SoftTriple(20, 0.1, 0.2, 0.01, 64, 10, 10)
+            self.criterion = ST.SoftTriple(opt.la, opt.gamma, opt.tau, opt.margin, 64, 10, opt.K)
         else:
             raise NotImplementedError('loss_type must be chosen from [crossentropy, softmaxnorm, softtriple]')
-    
+
         if train:
             self.checkpoint_dir = opt.checkpoint_dir
 
