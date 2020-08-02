@@ -17,6 +17,7 @@ mkdir path/to/checkpoint_dir
 python train.py --loss_type softtriple --checkpoint_dir path/to/checkpoint_dir
 ```
 You can choose loss_type from `softtriple`, `softmaxnorm` and `crossentropy`.
+For other options, please refer helps: `python train.py -h`.
 
 3. Test
 
