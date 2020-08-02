@@ -32,5 +32,9 @@ KMNIST (http://codh.rois.ac.jp/kmnist/)
 - 『KMNISTデータセット』（CODH作成） 『日本古典籍くずし字データセット』（国文研ほか所蔵） doi:10.20676/00000341
 - Tarin Clanuwat, Mikel Bober-Irizar, Asanobu Kitamoto, Alex Lamb, Kazuaki Yamamoto, David Ha, "Deep Learning for Classical Japanese Literature", arXiv:1812.01718.
 
+## References
+- Qi Qian, Lei Shang, Baigui Sun, Juhua Hu, Hao Li, Rong Jin, "SoftTriple Loss: Deep Metric Learning Without Triplet Sampling", ICCV 2019.
+- Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun, "Deep Residual Learning for Image Recognition", CVPR 2016.
+
 # Acknowledgements
 This implementation is based on https://github.com/idstcv/SoftTriple.
